@@ -21,29 +21,8 @@ jobs:
       with:
         python-version: '3.10'
     
-    - name: Create __init__.py
-      run: |
-        echo "" > __init__.py
+    - name: Create init file
+      run: touch __init__.py
     
     - name: Run tests
-      run: |
-        python -c "
-        
-import sys
-import os
-import unittest
-
-current_dir = os.getcwd()
-if current_dir not in sys.path:
-    sys.path.insert(0, current_dir)
-
-loader = unittest.TestLoader()
-start_dir = os.getcwd()
-suite = loader.discover(start_dir, pattern='test_*.py')
-
-runner = unittest.TextTestRunner(verbosity=2)
-result = runner.run(suite)
-
-exit_code = 0 if result.wasSuccessful() else 1
-sys.exit(exit_code)
-        "
+      run: python -m unittest discover -v
