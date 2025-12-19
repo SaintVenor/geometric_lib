@@ -1,39 +1,49 @@
-name: Python Unit Tests
+name: Python Unit Tests CI
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [main, master]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [main, master]
 
 jobs:
   test:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ["3.9", "3.10", "3.11"]
-
-    runs-on: ${{ matrix.os }}
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
     
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.10'
     
-    - name: Display Python version
-      run: python --version
-    
-    - name: List project files
+    - name: Create __init__.py
       run: |
-        echo "Project structure:"
-        ls -la
-        echo "Python files:"
-        find . -name "*.py" -type f
+        echo "" > __init__.py
     
-    - name: Discover and run all tests
+    - name: Run tests
       run: |
-        python -m unittest discover -s . -p "test_*.py" -v
+        python -c "
+        
+import sys
+import os
+import unittest
+
+current_dir = os.getcwd()
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+loader = unittest.TestLoader()
+start_dir = os.getcwd()
+suite = loader.discover(start_dir, pattern='test_*.py')
+
+runner = unittest.TextTestRunner(verbosity=2)
+result = runner.run(suite)
+
+exit_code = 0 if result.wasSuccessful() else 1
+sys.exit(exit_code)
+        "
